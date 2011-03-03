@@ -1,24 +1,19 @@
 
-#define MMC_CD  9
-#define MMC_CS  10
-#define MMC_DI  11
-#define MMC_DO  12
-#define LED     13
+#define AH 6
+#define AL 7
 
 void setup() {        
-  Serial.begin(9600);  
-  pinMode(MMC_CD, INPUT);
-  pinMode(LED, OUTPUT);
+  Serial.begin(19200);    
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
 }
 
 void loop() {
-  int cd = digitalRead(MMC_CD);
-  if ( cd == HIGH ) {
-    Serial.println("Card is present");
-    digitalWrite(LED, HIGH);
-  }
-  else {
-    Serial.println("NO Card");
-    digitalWrite(LED, LOW);
-  }
+  int ah = digitalRead(AH);
+  int al = digitalRead(AL);
+  
+  Serial.print(ah);
+  Serial.println(al);
+  
+  delay(250);
 }
