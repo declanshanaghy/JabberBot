@@ -8,6 +8,9 @@ void setup()
 {
   Serial.begin(9600);
   Wire.begin(); // join i2c bus (address optional for master)
+  
+  // change the clock rate to 400kHz (probably requires 1k5 external pull up resistors)
+  //TWBR = ((CPU_FREQ / 400000L) - 16) / 2;  
 }
 
 int count=0;
