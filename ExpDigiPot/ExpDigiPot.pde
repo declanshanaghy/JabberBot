@@ -37,6 +37,7 @@ void loop() {
     Serial.println(vPot);
     delay(100);
   }
+  delay(10000);
 }
 
 void spi_tx(int val) {
