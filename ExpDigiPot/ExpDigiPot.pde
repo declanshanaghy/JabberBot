@@ -1,38 +1,28 @@
+#include <DS1802.h>
 #include <SPI.h>
-//#include <MCP4161.h>
 
-#define POT_CS  10
-#define POT_ALG  A0
-//MCP4161 pot = MCP4161(10);
+#define POT_CS      10
+#define POT_MUTE    9
+#define POT_ALG0    A0
+
+DS1802 pot = DS1802(POT_CS,POT_MUTE);
 
 void setup() {
   Serial.begin(115200);
-  
-  pinMode(POT_CS, OUTPUT);
-  digitalWrite(POT_CS, LOW);
-    
-  SPI.begin();
-  SPI.setBitOrder(LSBFIRST);
-  SPI.setDataMode(SPI_MODE0);
-  SPI.setClockDivider(SPI_CLOCK_DIV128);
-
-  digitalWrite(10, LOW);
-  digitalWrite(11, LOW);
-  digitalWrite(13, LOW);
 }
 
 boolean dir = LOW;
 void loop() {
-  for ( int i=0; i<=63; i++ ) {
-    spi_tx(i);
-    int vPot = analogRead(POT_ALG);
+  for ( int i=0; i<=DS1802_MAX; i++ ) {
+    pot.setValues(i,0);
+    int vPot = analogRead(POT_ALG0);
     Serial.print("Analog value: ");
     Serial.println(vPot);
     delay(100);
   }
-  for ( int i=63; i>=0; i-- ) {
-    spi_tx(i);
-    int vPot = analogRead(POT_ALG);
+  for ( int i=DS1802_MAX; i>=0; i-- ) {
+    pot.setValues(i,0);
+    int vPot = analogRead(POT_ALG0);
     Serial.print("Analog value: ");
     Serial.println(vPot);
     delay(100);
@@ -72,7 +62,7 @@ void loop2() {
 //  Serial.print("POT ret: ");
 //  Serial.println(ret, BIN);
   
-  int vPot = analogRead(POT_ALG);
+  int vPot = analogRead(POT_ALG0);
   Serial.print("Analog value: ");
   Serial.println(vPot);
 }
