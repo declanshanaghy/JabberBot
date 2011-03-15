@@ -2,24 +2,24 @@ EAGLE AutoRouter Statistics:
 
 Job           : /Users/dshanaghy/Workspace/PersonalProjects/PhonicBot/Hardware/AudioBoard.brd
 
-Start at      : 21:06:09 (3/7/11)
-End at        : 21:06:10 (3/7/11)
-Elapsed time  : 00:00:01
+Start at      : 08:16:02 (3/15/11)
+End at        : 08:16:02 (3/15/11)
+Elapsed time  : 00:00:00
 
 Signals       :    36   RoutingGrid: 50 mil  Layers: 2
-Connections   :    83   predefined:  82 ( 7 Vias )
+Connections   :    83   predefined:  83 ( 9 Vias )
 
-Router memory :   13440
+Router memory :   13216
 
 Passname          :     Route Optimize1 Optimize2 Optimize3 Optimize4
 
-Time per pass     :  00:00:00  00:00:00  00:00:00  00:00:01  00:00:00
+Time per pass     :  00:00:00  00:00:00  00:00:00  00:00:00  00:00:00
 Number of Ripups  :         0         0         0         0         0
 max. Level        :         0         0         0         0         0
 max. Total        :         0         0         0         0         0
 
-Routed            :         1         1         1         1         1
-Vias              :         2         2         2         2         2
+Routed            :         0         0         0         0         0
+Vias              :         0         0         0         0         0
 Resolution        :   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %
 
 Final             : 100.0% finished
