@@ -2,8 +2,8 @@ EAGLE AutoRouter Statistics:
 
 Job           : /Users/dshanaghy/Workspace/PersonalProjects/PhonicBot/Hardware/MotorBoard.brd
 
-Start at      : 08:12:46 (3/15/11)
-End at        : 08:12:48 (3/15/11)
+Start at      : 08:36:06 (3/15/11)
+End at        : 08:36:08 (3/15/11)
 Elapsed time  : 00:00:02
 
 Signals       :    45   RoutingGrid: 8 mil  Layers: 2
@@ -13,7 +13,7 @@ Router memory :   522288
 
 Passname          :     Route Optimize1 Optimize2 Optimize3 Optimize4
 
-Time per pass     :  00:00:00  00:00:00  00:00:01  00:00:00  00:00:01
+Time per pass     :  00:00:00  00:00:01  00:00:00  00:00:01  00:00:00
 Number of Ripups  :         0         0         0         0         0
 max. Level        :         0         0         0         0         0
 max. Total        :         0         0         0         0         0
