@@ -2,7 +2,7 @@
 #include <SPI.h>
 
 #define POT_CS      10
-#define POT_MUTE    9
+#define POT_MUTE    8
 #define POT_ALG0    A0
 
 DS1802 pot = DS1802(POT_CS,POT_MUTE);
@@ -14,20 +14,31 @@ void setup() {
 boolean dir = LOW;
 void loop() {
   for ( int i=0; i<=DS1802_MAX; i++ ) {
-    pot.setValues(i,0);
+    pot.setValues(i,i);
     int vPot = analogRead(POT_ALG0);
     Serial.print("Analog value: ");
     Serial.println(vPot);
     delay(100);
   }
   for ( int i=DS1802_MAX; i>=0; i-- ) {
-    pot.setValues(i,0);
+    pot.setValues(i,i);
     int vPot = analogRead(POT_ALG0);
     Serial.print("Analog value: ");
     Serial.println(vPot);
     delay(100);
   }
-  delay(10000);
+  delay(5000);
+
+  for ( int i=0; i<=4; i++ ) {
+    boolean m = i%2==0;
+    Serial.print("MUTE: ");
+    Serial.println(m ? "1" : "0");
+    m ? pot.mute() : pot.unmute();
+    //pot.setMute(m,m);
+    delay(1000);
+  }
+  pot.setMute(false,false);
+  pot.unmute();
 }
 
 void spi_tx(int val) {
