@@ -2,8 +2,8 @@ EAGLE AutoRouter Statistics:
 
 Job           : /Users/dshanaghy/Workspace/PersonalProjects/PhonicBot/Hardware/AudioBoard.brd
 
-Start at      : 08:16:02 (3/15/11)
-End at        : 08:16:02 (3/15/11)
+Start at      : 17:28:04 (3/17/11)
+End at        : 17:28:04 (3/17/11)
 Elapsed time  : 00:00:00
 
 Signals       :    36   RoutingGrid: 50 mil  Layers: 2
