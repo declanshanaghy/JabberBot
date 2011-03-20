@@ -1,8 +1,9 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <DS1802.h>
-#include "../Morpheus/MorpheusAudio.h"
-#include "../Morpheus/MorpheusMotor.h"
+#include <MorpheusAudio.h>
+#include <MorpheusMotor.h>
+
 
 #define POT_CS      10
 #define POT_MUTE    8
@@ -15,9 +16,11 @@ MorpheusMotor motor = MorpheusMotor(0b100);
 
 void setup() {
   Serial.begin(115200);
-  
-  fx0.playRandom();
+  Wire.begin(); // join i2c bus (address optional for master)
 }
 
 void loop() {
+  Serial.println("Sending playRandom()");
+  fx0.playRandom();
+  delay(1000);
 }
