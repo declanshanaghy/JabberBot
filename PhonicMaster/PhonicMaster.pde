@@ -1,8 +1,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <DS1802.h>
-#include <MorpheusAudio.h>
-#include <MorpheusMotor.h>
+#include "../Morpheus/MorpheusAudio.h"
+#include "../Morpheus/MorpheusMotor.h"
 
 #define POT_CS      10
 #define POT_MUTE    8
