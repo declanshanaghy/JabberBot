@@ -11,11 +11,11 @@ void setup() {
   //servo1.setMinimumPulse(700);
 
   servo2.attach(10); //analog pin 1
-  Serial.begin(19200);
+  Serial.begin(9600);
   Serial.println("Ready");
 
-  servo1.write(90);
-  servo2.write(180);
+  servo1.write(0);
+  servo2.write(0);
 }
 
 void loop() {
@@ -37,10 +37,12 @@ void loop() {
         v = 0;
         break;
       case 'd':
+        Serial.println("detach");
         servo1.detach();
         servo2.detach();
         break;
       case 'a':
+        Serial.println("attach");
         servo1.attach(9);
         servo2.attach(10);
         break;

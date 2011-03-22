@@ -23,7 +23,7 @@ FatReader root;   // This holds the information for the volumes root directory
 FatReader file;   // This object represent the WAV file 
 WaveHC wave;      // This is the only wave (audio) object, since we will only play one at a time
 
-MorpheusSlave slave = MorpheusSlave(0x00);
+MorpheusSlave slave;
 
 void setup()
 {
@@ -36,9 +36,13 @@ void setup()
   int h = digitalRead(PIN_ADDR_MSB);
   addr = h << 1 | l;
 
-  Wire.onReceive(receiveEvent); // register event
+  randomSeed(analogRead(0));
   
   setupWave();
+  indexFiles();
+  
+  Wire.begin(addr); // join i2c bus as a slave	
+  Wire.onReceive(receiveEvent); // register event
   
   Serial.println("Morpheus audio bot: RDY :-)");
   Serial.print("My I2C address is: 0x");
@@ -46,7 +50,7 @@ void setup()
 }
 
 void receiveEvent(int n) {
-  slave.receiveEvent(n);
+  slave.receiveI2C(n);
 }
 
 void setupWave() {
@@ -63,6 +67,11 @@ void setupWave() {
 void reset() {
   Serial.println("reset");
   setupWave();
+}
+
+void test() {
+  Serial.println("test");
+  playRandom();
 }
 
 void loop()
@@ -83,6 +92,9 @@ void loop()
       case 's':
         stopPlayback();
         break;
+      case 't':
+        test();
+        break;
       case 'z':
         reset();
         break;
@@ -96,7 +108,7 @@ void loop()
 
 void playRandom() {
   Serial.println("playRandom");
-  playById(random(maxIndex));
+  playById(random(maxIndex+1));
 }
 
 void stopPlayback() {

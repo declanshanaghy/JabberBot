@@ -7,19 +7,20 @@ void setup() {
   Serial.println("Motor test!");
   
   motor.setSpeed(255);     // set the speed
+  motor.run(FORWARD);      // turn it on going forward
 }
 
 void loop() {
-  Serial.print("tick");
-  
-  motor.run(FORWARD);      // turn it on going forward
-  delay(1000);
-
-  Serial.print("tack");
-  motor.run(RELEASE);      // stopped
-  delay(1000);
-
-  Serial.print("tock");
-  motor.run(BACKWARD);     // the other way
-  delay(1000);  
+//  Serial.print("tick");
+//  
+//  motor.run(FORWARD);      // turn it on going forward
+//  delay(1000);
+//
+//  Serial.print("tack");
+//  motor.run(RELEASE);      // stopped
+//  delay(1000);
+//
+//  Serial.print("tock");
+//  motor.run(BACKWARD);     // the other way
+//  delay(1000);  
 }
