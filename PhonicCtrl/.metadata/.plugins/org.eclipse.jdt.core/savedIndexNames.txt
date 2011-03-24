@@ -1,5 +1,0 @@
-INDEX VERSION 1.126+/Users/dshanaghy/Workspace/PersonalProjects/PhonicBot/PhonicCtrl/.metadata/.plugins/org.eclipse.jdt.core
-1801548210.index
-257166907.index
-102329364.index
-2987528056.index

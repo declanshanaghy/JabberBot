@@ -1,5 +1,0 @@
-
-    <RelativeLayout android:id="@+id/relativeLayout1" android:layout_width="fill_parent" android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.MobileAnarchy.Android.Widgets.Joystick.JoystickView android:id="@+id/jvDrive" android:layout_width="175dip" android:layout_marginTop="20dip" android:layout_gravity="center_horizontal" android:layout_height="175dip"></com.MobileAnarchy.Android.Widgets.Joystick.JoystickView>
-    
-    </RelativeLayout>
