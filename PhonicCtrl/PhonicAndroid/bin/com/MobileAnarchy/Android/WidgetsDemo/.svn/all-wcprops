@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/16/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo
+END
+MainActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/16/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/MainActivity.java
+END
+DragAndDropActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/16/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/DragAndDropActivity.java
+END
+SortableListActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/14/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/SortableListActivity.java
+END
+ThresholdEditTextActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/10/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/ThresholdEditTextActivity.java
+END
+DockPanelVerticalActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/10/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/DockPanelVerticalActivity.java
+END
+DockPanelHorizontalActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/10/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/DockPanelHorizontalActivity.java
+END
+TilesLayoutActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/16/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/TilesLayoutActivity.java
+END
+JoystickActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/14/trunk/Widgets/src/com/MobileAnarchy/Android/WidgetsDemo/JoystickActivity.java
+END

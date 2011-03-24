@@ -1,0 +1,212 @@
+package com.threefiftynice.android.phonicbot;
+
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.Display;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.MobileAnarchy.Android.Widgets.Joystick.JoystickMovedListener;
+import com.MobileAnarchy.Android.Widgets.Joystick.JoystickView;
+import com.example.android.BluetoothChat.BluetoothChatService;
+import com.example.android.BluetoothChat.R;
+
+public class PhonicBot extends Activity {
+	protected static final String TAG = PhonicBot.class.getSimpleName();
+	private static final boolean D = true;
+	private static final int REQUEST_ENABLE_BT = 0;
+	
+    // Message types sent from the BluetoothChatService Handler
+    public static final int MESSAGE_STATE_CHANGE = 1;
+    public static final int MESSAGE_READ = 2;
+    public static final int MESSAGE_WRITE = 3;
+    public static final int MESSAGE_DEVICE_NAME = 4;
+    public static final int MESSAGE_TOAST = 5;
+
+    // Key names received from the BluetoothChatService Handler
+    public static final String DEVICE_NAME = "device_name";
+    public static final String TOAST = "toast";
+
+	private JoystickView jvDrive, jvLook;
+	private BluetoothAdapter mBluetoothAdapter;
+	private BluetoothClient mBTClient;
+	private TextView mTitle;
+	
+    private final Handler mHandler = new Handler() {
+        private String mConnectedDeviceName;
+
+		@Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+            case MESSAGE_STATE_CHANGE:
+                if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+                switch (msg.arg1) {
+                case BluetoothClient.STATE_CONNECTED:
+                    mTitle.setText("Connected to: " + mConnectedDeviceName);
+                    break;
+                case BluetoothClient.STATE_CONNECTING:
+                	mTitle.setText("Connecting...");
+                    break;
+                case BluetoothClient.STATE_NONE:
+                	mTitle.setText("Not connected");
+                    break;
+                }
+                break;
+            case MESSAGE_WRITE:
+                byte[] writeBuf = (byte[]) msg.obj;
+                // construct a string from the buffer
+                String writeMessage = new String(writeBuf);
+                Log.d(TAG, writeMessage);
+                break;
+            case MESSAGE_READ:
+                byte[] readBuf = (byte[]) msg.obj;
+                // construct a string from the valid bytes in the buffer
+                String readMessage = new String(readBuf, 0, msg.arg1);
+                Log.d(TAG, readMessage);
+                break;
+            case MESSAGE_DEVICE_NAME:
+                // save the connected device's name
+                mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+                Toast.makeText(getApplicationContext(), "Connected to "
+                               + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                break;
+            case MESSAGE_TOAST:
+                Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
+                               Toast.LENGTH_SHORT).show();
+                break;
+            }
+        }
+    };
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.phonic);
+
+        // Set up the window layout
+        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
+        setContentView(R.layout.main);
+        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title);
+
+        // Set up the custom title
+        mTitle = (TextView) findViewById(R.id.title_left_text);
+        mTitle.setText(R.string.app_name);
+        mTitle = (TextView) findViewById(R.id.title_right_text);
+
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        // Initialize the BluetoothChatService to perform bluetooth connections
+        mBTClient = new BluetoothClient(this, mHandler);
+        
+		Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+		int orientation = display.getOrientation();
+		if ( orientation == 1 ) {
+			setupUI();			
+		}
+	}
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Stop the Bluetooth service
+        if (mBTClient != null) mBTClient.stop();
+        if(D) Log.e(TAG, "--- ON DESTROY ---");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if(D) Log.e(TAG, "++ ON START ++");
+
+        // If BT is not on, request that it be enabled.
+        // setupChat() will then be called during onActivityResult
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+        // Otherwise, setup the chat session
+        } else {
+            setupConnection();
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(D) Log.d(TAG, "onActivityResult " + resultCode);
+        switch (requestCode) {
+        case REQUEST_ENABLE_BT:
+            // When the request to enable Bluetooth returns
+            if (resultCode == Activity.RESULT_OK) {
+                // Bluetooth is now enabled, so set up a connection
+                setupConnection();
+            } else {
+                // User did not enable Bluetooth or an error occurred
+                Log.d(TAG, "BT not enabled");
+                Toast.makeText(this, "Bluetooth not enabled, exiting...", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+
+	private void setupConnection() {
+		
+	}
+
+    /**
+     * Sends a message.
+     * @param message  A string of text to send.
+     */
+    private void sendMessage(String message) {
+        // Check that we're actually connected before trying anything
+        if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+            Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check that there's actually something to send
+        if (message.length() > 0) {
+            // Get the message bytes and tell the BluetoothChatService to write
+            byte[] send = message.getBytes();
+            mChatService.write(send);
+
+            // Reset out string buffer to zero and clear the edit text field
+            mOutStringBuffer.setLength(0);
+            mOutEditText.setText(mOutStringBuffer);
+        }
+    }
+
+	private void setupUI() {
+		jvDrive = (JoystickView)findViewById(R.id.jvDrive);
+		jvDrive.setOnJostickMovedListener( new JoystickMovedListener() {
+			@Override
+			public void OnMoved(int pan, int tilt) {
+				Log.i(TAG, pan + "," + tilt);
+			}
+
+			@Override
+			public void OnReleased() {
+			}
+		});
+		jvLook = (JoystickView)findViewById(R.id.jvDrive);
+		jvLook.setOnJostickMovedListener( new JoystickMovedListener() {
+			@Override
+			public void OnMoved(int pan, int tilt) {
+				Log.i(TAG, pan + "," + tilt);
+			}
+
+			@Override
+			public void OnReleased() {
+			}
+		});
+	}
+}

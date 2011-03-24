@@ -20,6 +20,8 @@ AF_DCMotor ml(4, MOTOR34_1KHZ); // create motor #4, 64KHz pwm
 Servo sv; 
 Servo sh; 
 
+#define DBG 0
+
 void setup()
 {
   Serial.begin(115200);
@@ -63,9 +65,11 @@ void setHorizontal(int angle) {
 }
 
 void reset() {
+#if DBG
   Serial.println("reset");
-  setHorizontal(0);
-  setVertical(0);
+#endif
+  setHorizontal(90);
+  setVertical(90);
   
   ml.setSpeed(0);
   ml.run(RELEASE);
@@ -78,16 +82,22 @@ void extractServoParams() {
   angle = slave.getIntData(0,3);
 
   if ( angle < 0 ) {
+#if DBG
     Serial.println("ERROR: angle < 0");
+#endif
     angle = 0;
   }
   else if ( angle > 180 ) {
+#if DBG
     Serial.println("ERROR: angle > 180");
+#endif
     angle = 180;
   }
 
+#if DBG
   Serial.print("angle: ");
   Serial.println(angle);
+#endif
 }
 
 void extractDCMotorParams() {
@@ -95,11 +105,15 @@ void extractDCMotorParams() {
   spd = slave.getIntData(1);
 
   if ( spd > 255 ) {
+#if DBG
     Serial.println("ERROR: speed > 255");
+#endif
     spd = 255;
   }
   else if ( spd != 0 && spd < 50 ) {
+#if DBG
     Serial.println("ERROR: speed < 50");
+#endif
     spd = 50;
   }
 
@@ -110,14 +124,18 @@ void extractDCMotorParams() {
   case RELEASE:
     break;  //A OK!
   default:
+#if DBG
     Serial.println("ERROR: Unsupported direction");
+#endif
     dir = RELEASE;
   }
 
+#if DBG
   Serial.print("dir, spd: ");
   Serial.print(dir);
   Serial.print(", ");
   Serial.println(spd);
+#endif
 }
 
 void loop() {
@@ -126,24 +144,32 @@ void loop() {
   if ( slave.newCommand() ) {
     switch ( slave.command ) {
     case 'a':  //Motor 1
+#if DBG
       Serial.print("right: ");
+#endif
       extractDCMotorParams();
       mr.setSpeed(spd);
       mr.run(dir);
       break;
     case 'd':  //Motor 4
+#if DBG
       Serial.print("left: ");
+#endif
       extractDCMotorParams();
       ml.setSpeed(spd);
       ml.run(dir);
       break;
     case 'r':
+#if DBG
       Serial.println("release");
+#endif
       ml.run(RELEASE);
       mr.run(RELEASE);
       break;
     case 's':
+#if DBG
       Serial.println("brake");
+#endif
       ml.setSpeed(0);
       mr.setSpeed(0);
       ml.run(BRAKE);
@@ -164,12 +190,16 @@ void loop() {
       }
       break;
     case 'e':
+#if DBG
       Serial.print("vertical: ");
+#endif
       extractServoParams();
       setVertical(angle);
       break;
     case 'f':
+#if DBG
       Serial.print("horizontal: ");
+#endif
       extractServoParams();
       setHorizontal(angle);
       break;
@@ -177,7 +207,10 @@ void loop() {
       reset();
       break;
     default:
+#if DBG
       Serial.println("Command not handled");
+#endif
+      break;
     }    
 
     slave.reset();
@@ -185,7 +218,9 @@ void loop() {
 }
 
 void testServos() {
+#if DBG
   Serial.println("Test servos");
+#endif
   
   sv.write(0);
   sh.write(0);
@@ -197,7 +232,9 @@ void testServos() {
 }
 
 void testDCMotors() {
+#if DBG
   Serial.println("testDCMotors");
+#endif
 
   ml.setSpeed(255);
   mr.setSpeed(255);
