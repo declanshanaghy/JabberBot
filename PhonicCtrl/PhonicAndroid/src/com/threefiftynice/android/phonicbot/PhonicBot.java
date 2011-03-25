@@ -1,23 +1,28 @@
 package com.threefiftynice.android.phonicbot;
 
+import java.io.UnsupportedEncodingException;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
-import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.MobileAnarchy.Android.Widgets.Joystick.JoystickClickedListener;
 import com.MobileAnarchy.Android.Widgets.Joystick.JoystickMovedListener;
 import com.MobileAnarchy.Android.Widgets.Joystick.JoystickView;
 
@@ -41,12 +46,6 @@ public class PhonicBot extends Activity {
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
 
-	private JoystickView jvDrive, jvLook;
-	private BluetoothAdapter mBluetoothAdapter;
-	private BluetoothClient mBTClient;
-	private TextView mTitle;
-    private String mConnectedDeviceName;
-	
     private final Handler mHandler = new Handler() {
 		@Override
         public void handleMessage(Message msg) {
@@ -62,24 +61,27 @@ public class PhonicBot extends Activity {
                     break;
                 case BluetoothClient.STATE_CONNECTED:
                     mTitle.setText("Connected to: " + mConnectedDeviceName);
-                    enableUI();
                     break;
                 case BluetoothClient.STATE_FAILED:
-                	startConnectDeviceSecure();
+                	mTitle.setText("Connection lost :-(");
+                	if ( mBluetoothAdapter != null )
+                		startConnectDeviceSecure();
                     break;
                 }
                 break;
             case MESSAGE_WRITE:
-                byte[] writeBuf = (byte[]) msg.obj;
-                // construct a string from the buffer
-                String writeMessage = new String(writeBuf);
-                Log.d(TAG, writeMessage);
-                break;
+            	if (D) {
+                    byte[] writeBuf = (byte[]) msg.obj;
+                    String writeMessage = new String(writeBuf);
+	                Log.d(TAG, "TX: " + writeMessage);
+                    break;
+            	}
             case MESSAGE_READ:
-                byte[] readBuf = (byte[]) msg.obj;
-                // construct a string from the valid bytes in the buffer
-                String readMessage = new String(readBuf, 0, msg.arg1);
-                Log.d(TAG, readMessage);
+            	if(D) {
+            		byte[] readBuf = (byte[]) msg.obj;
+					String readMessage = new String(readBuf, 0, msg.arg1);
+                    Log.d(TAG, "RX: " + readMessage);
+            	}
                 break;
             case MESSAGE_DEVICE_NAME:
                 // save the connected device's name
@@ -93,7 +95,23 @@ public class PhonicBot extends Activity {
         }
     };
 
-	@Override
+	private enum JoyStickState { Drive, Look };
+	private JoyStickState jvState = JoyStickState.Look;
+	
+	private ServoController servoController;
+	private MotorController motorController;
+
+	private BluetoothClient mBTClient;
+	private TextView mTitle;
+    private String mConnectedDeviceName;
+
+	private BluetoothAdapter mBluetoothAdapter;
+
+	private JoystickView vJoystick;
+	private TextView vJoystickStatus;
+	private SeekBar vVol;
+
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
@@ -108,14 +126,15 @@ public class PhonicBot extends Activity {
         mTitle = (TextView) findViewById(R.id.title_right_text);
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
-            finish();
-            return;
+        if (mBluetoothAdapter != null) {
+            // Initialize the BluetoothChatService to perform bluetooth connections
+        	mBTClient = new BluetoothClient(this, mHandler);
         }
-
-        // Initialize the BluetoothChatService to perform bluetooth connections
-        mBTClient = new BluetoothClient(this, mHandler);
+//        else {
+//          Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
+//          finish();
+//          return;
+//        }
         
 		setupUI();			
 	}
@@ -135,23 +154,27 @@ public class PhonicBot extends Activity {
 
         // If BT is not on, request that it be enabled.
         // setupChat() will then be called during onActivityResult
-        if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        // Otherwise, setup the chat session
-        } else {
-            startConnectDeviceSecure();
+        if ( mBluetoothAdapter != null ) {
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+            // Otherwise, setup the chat session
+            } else {
+                startConnectDeviceSecure();
+            }
         }
     }
 
     private void connectDevice(Intent data, boolean secure) {
-        // Get the device MAC address
-        String address = data.getExtras()
-            .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-        // Get the BLuetoothDevice object
-        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-        // Attempt to connect to the device
-        mBTClient.connect(device, secure);
+        if (mBluetoothAdapter != null) {
+            // Get the device MAC address
+            String address = data.getExtras()
+                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+            // Get the BLuetoothDevice object
+            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+            // Attempt to connect to the device
+            mBTClient.connect(device, secure);
+        }
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -161,15 +184,11 @@ public class PhonicBot extends Activity {
             // When DeviceListActivity returns with a device to connect
             if (resultCode == Activity.RESULT_OK)
                 connectDevice(data, true);
-            else
-            	finish();
             break;
         case REQUEST_CONNECT_DEVICE_INSECURE:
             // When DeviceListActivity returns with a device to connect
             if (resultCode == Activity.RESULT_OK)
                 connectDevice(data, false);
-            else
-            	finish();
             break;
         case REQUEST_ENABLE_BT:
             // When the request to enable Bluetooth returns
@@ -178,7 +197,7 @@ public class PhonicBot extends Activity {
                 startConnectDeviceSecure();
             } else {
                 // User did not enable Bluetooth or an error occured
-                Log.d(TAG, "BT not enabled");
+                Log.e(TAG, "BT not enabled");
                 Toast.makeText(this, "BT not enabled, exiting", Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -189,77 +208,72 @@ public class PhonicBot extends Activity {
      * Sends a message.
      * @param message  A string of text to send.
      */
-    private void sendMessage(String message) {
-        // Check that we're actually connected before trying anything
-        if (mBTClient.getState() != BluetoothClient.STATE_CONNECTED) {
-            Toast.makeText(this, "Not connected", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    private void sendMessage(byte[] send) {
+    	if ( mBTClient != null ) {
+            // Check that we're actually connected before trying anything
+            if (mBTClient.getState() != BluetoothClient.STATE_CONNECTED) {
+                //Toast.makeText(this, "Not connected", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        // Check that there's actually something to send
-        if (message.length() > 0) {
-            // Get the message bytes and tell the BluetoothChatService to write
-            byte[] send = message.getBytes();
-            mBTClient.write(send);
-        }
+            // Check that there's actually something to send
+            if (send != null && send.length > 0) {
+                mBTClient.write(send);
+            }
+    	}
     }
 
-    //Converts -10...10 -> 0...180
-    private int joyToServo(int j, int sensitivity) {
-    	j += sensitivity;	//make positive
-    	return j * ((sensitivity * 2) / 180);
-    }
-    
-    private void enableUI() {
-		jvDrive.setEnabled(true);
-		jvDrive.setOnJostickMovedListener( new JoystickMovedListener() {
-			@Override
-			public void OnMoved(int pan, int tilt) {
-				Log.i(TAG, "drive: " + pan + "," + tilt);
-			}
-
-			@Override
-			public void OnReleased() {
-			}
-		});
-		jvLook.setEnabled(true);
-		jvLook.setOnJostickMovedListener( new JoystickMovedListener() {
-			private int pan;
-			private int tilt;
-
-			@Override
-			public void OnMoved(int pan, int tilt) {
-				if ( Math.abs(this.pan - pan) > 2 ) {
-					this.pan = pan;
-					Log.i(TAG, "pan: " + pan);
-					sendMessage("e" + String.valueOf(joyToServo(pan, jvDrive.getSensitivity())) + "\n");
-				}
-					
-				if ( Math.abs(this.tilt - tilt) > 2 ) {
-					this.tilt = tilt;
-					Log.i(TAG, "tilt: " + tilt);
-					sendMessage("f" + String.valueOf(joyToServo(tilt, jvLook.getSensitivity())) + "\n");
-				}
-			}
-
-			@Override
-			public void OnReleased() {
-				sendMessage("e90\n");
-				sendMessage("f90\n");
-			}
-		});
-    }
-    
 	private void setupUI() {
-		jvDrive = (JoystickView)findViewById(R.id.jvDrive);
-		jvDrive.setEnabled(false);
-		jvDrive.setSensitivity(90);
-		jvLook = (JoystickView)findViewById(R.id.jvLook);
-		jvLook.setEnabled(false);
-		jvLook.setSensitivity(90);
+		vVol = (SeekBar)findViewById(R.id.vVol);
+		vVol.setOnSeekBarChangeListener(new VolumeControl());
+		vVol.setProgress(50);
+		
+		servoController = new ServoController();
+		motorController = new MotorController();
+		vJoystick = (JoystickView)findViewById(R.id.vJoystick);
+		vJoystickStatus = (TextView)findViewById(R.id.vJoystickStatus);
+		setJoystickState(JoyStickState.Drive);
+
+		Button bRandom = (Button)findViewById(R.id.bRandom);
+		bRandom.setOnClickListener(new OnClickListener() {
+			byte[] random = new byte[] { 'r' };
+			@Override
+			public void onClick(View v) {
+				sendMessage(random);
+			}
+		});
+		
+		vJoystick.setOnJostickClickedListener(new JoystickClickedListener() {
+			@Override
+			public void OnReleased() {
+				switch ( jvState ) {
+				case Look:
+					setJoystickState(JoyStickState.Drive);
+					break;
+				case Drive:
+					setJoystickState(JoyStickState.Look);
+					break;
+				}
+			}
+		});
 	}
 	
-    @Override
+    private void setJoystickState(JoyStickState s) {
+		switch ( s ) {
+		case Drive:
+			vJoystickStatus.setText("Drive");
+			vJoystick.setOnJostickMovedListener(motorController);
+			jvState = JoyStickState.Drive;
+			break;
+		case Look:
+			vJoystickStatus.setText("Look");
+			vJoystick.setOnJostickMovedListener(servoController);
+			jvState = JoyStickState.Look;
+			break;
+		}
+	}
+
+	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.option_menu, menu);
@@ -277,9 +291,82 @@ public class PhonicBot extends Activity {
     }
 
 	private void startConnectDeviceSecure() {
-		Intent serverIntent;
-		serverIntent = new Intent(this, DeviceListActivity.class);
-		startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+		if ( mBluetoothAdapter != null ) {
+			Intent serverIntent;
+			serverIntent = new Intent(this, DeviceListActivity.class);
+			startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+		}
 	}
+
+    private class MotorController extends JoystickMovedListener {
+    	private byte[] out = new byte[] { 0,0,'\n' };
+
+		@Override
+		public void OnMoved(int pan, int tilt) {
+			//TODO: Compute vectors and send message
+			Log.d(TAG, String.format("drive(%d,%d)", pan, tilt));
+		}
+
+		@Override
+		public int getMode() {
+			return MODE_SWINGAXIS;
+		}
+
+		@Override
+		public int getRange() {
+			return 255;
+		}
+		
+		@Override
+		public float getSensitivity() {
+			return 2.0f;
+		}
+    }
+    
+    private class ServoController extends JoystickMovedListener {
+		private byte[] out = new byte[] { 0,0,'\n' };
+		
+		@Override
+		public void OnMoved(int pan, int tilt) {
+			if(D) Log.d(TAG, String.format("look(%d,%d)", pan, tilt));
+			
+			out[0] = 'e';
+			out[1] = (byte)pan;
+			sendMessage(out);
+				
+			out[0] = 'f';
+			out[1] = (byte)tilt;
+			sendMessage(out);
+		}
+
+		@Override
+		public int getMode() {
+			return JoystickMovedListener.MODE_NOSWINGAXIS;
+		}
+
+		@Override
+		public int getRange() {
+			return 180;
+		}
+    }
+    
+    private class VolumeControl implements OnSeekBarChangeListener {
+		private byte[] out = new byte[] { 'v', 50, '\n' };
+		
+		@Override
+		public void onStopTrackingTouch(SeekBar seekBar) {
+		}
+		
+		@Override
+		public void onStartTrackingTouch(SeekBar seekBar) {
+		}
+		
+		@Override
+		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+			out[1] = (byte)progress;
+			if(D) Log.d(TAG, String.format("volume(%d)", progress));			
+			sendMessage(out);
+		}
+    }
 }
 

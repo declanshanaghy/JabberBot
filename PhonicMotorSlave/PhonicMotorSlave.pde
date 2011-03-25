@@ -51,17 +51,11 @@ void receiveEvent(int n) {
 }
 
 void setVertical(int angle) {
-//  sv.attach(PIN_SRV_V);
   sv.write(angle);
-//  delay(100);
-//  sv.detach();
 }
 
 void setHorizontal(int angle) {
-//  sh.attach(PIN_SRV_H);
   sh.write(angle);
-//  delay(100);
-//  sh.detach();
 }
 
 void reset() {
@@ -79,8 +73,7 @@ void reset() {
 }
 
 void extractServoParams() {
-  angle = slave.getIntData(0,3);
-
+  angle = slave.getData(0);
   if ( angle < 0 ) {
 #if DBG
     Serial.println("ERROR: angle < 0");
@@ -101,38 +94,54 @@ void extractServoParams() {
 }
 
 void extractDCMotorParams() {
-  dir = slave.getIntData(0,1);
-  spd = slave.getIntData(1);
-
+  spd = slave.getData(1);
   if ( spd > 255 ) {
 #if DBG
-    Serial.println("ERROR: speed > 255");
+    Serial.print("ERROR: speed > 255: ");
 #endif
     spd = 255;
   }
   else if ( spd != 0 && spd < 50 ) {
 #if DBG
-    Serial.println("ERROR: speed < 50");
+    Serial.print("ERROR: speed < 50: ");
 #endif
     spd = 50;
   }
 
-  switch ( dir ) {
-  case FORWARD:
-  case BACKWARD:
-  case BRAKE:
-  case RELEASE:
-    break;  //A OK!
-  default:
+  char cDir = slave.getChar(0);
+  switch (cDir) {
+    case '1':
+    case 'f':
+      cDir = 'f';
+      dir = FORWARD;
+      break;
+    case '2':
+    case 'b':
+      cDir = 'b';
+      dir = BACKWARD;
+      break;
+    case '3':
+    case 's':
+      cDir = 's';
+      dir = BRAKE;
+      spd = 0;
+      break;
+    case '4':
+    case 'r':
+      cDir = 'r';
+      dir = RELEASE;
+      spd = 0;
+      break;
+    default:
 #if DBG
-    Serial.println("ERROR: Unsupported direction");
+      Serial.println("ERROR: Unsupported direction");
 #endif
-    dir = RELEASE;
+      dir = BRAKE;
+      spd = 0;
   }
 
 #if DBG
-  Serial.print("dir, spd: ");
-  Serial.print(dir);
+  Serial.print(cDir);
   Serial.print(", ");
   Serial.println(spd);
 #endif

@@ -196,6 +196,8 @@ public class BluetoothClient {
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
+        setState(STATE_FAILED);
+        
         // Start the service over to restart listening mode
         BluetoothClient.this.start();
     }
@@ -306,8 +308,7 @@ public class BluetoothClient {
                     bytes = mmInStream.read(buffer);
 
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(PhonicBot.MESSAGE_READ, bytes, -1, buffer)
-                            .sendToTarget();
+                    mHandler.obtainMessage(PhonicBot.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
@@ -327,8 +328,7 @@ public class BluetoothClient {
                 mmOutStream.write(buffer);
 
                 // Share the sent message back to the UI Activity
-                mHandler.obtainMessage(PhonicBot.MESSAGE_WRITE, -1, -1, buffer)
-                        .sendToTarget();
+                mHandler.obtainMessage(PhonicBot.MESSAGE_WRITE, -1, -1, buffer).sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
             }

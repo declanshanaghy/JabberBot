@@ -98,18 +98,15 @@ containing a value of this type.
         public static final int TextViewThreasholdTextChange=0x7f070024;
         public static final int TextViewX=0x7f07000e;
         public static final int TextViewY=0x7f07000f;
-        public static final int button1=0x7f07001b;
+        public static final int bRandom=0x7f07001a;
         public static final int button_scan=0x7f070006;
-        public static final int content=0x7f07001f;
         public static final int dragsurface=0x7f07000c;
         public static final int frameLayout1=0x7f070017;
-        public static final int handle=0x7f07001e;
         public static final int icon=0x7f070020;
         public static final int joystickView=0x7f07000d;
-        public static final int jvDrive=0x7f070019;
-        public static final int jvLook=0x7f07001c;
         public static final int linearLayout1=0x7f070018;
-        public static final int linearLayout2=0x7f07001a;
+        public static final int linearLayout2=0x7f070019;
+        public static final int linearLayout3=0x7f07001d;
         public static final int menu_item1by1=0x7f070027;
         public static final int menu_item2by2=0x7f070028;
         public static final int menu_item2by3=0x7f07002a;
@@ -120,12 +117,15 @@ containing a value of this type.
         public static final int new_devices=0x7f070005;
         public static final int paired_devices=0x7f070003;
         public static final int secure_connect_scan=0x7f070026;
-        public static final int slidingDrawer1=0x7f07001d;
+        public static final int textView1=0x7f07001b;
         public static final int tileLayout=0x7f070025;
         public static final int title_left_text=0x7f070000;
         public static final int title_new_devices=0x7f070004;
         public static final int title_paired_devices=0x7f070002;
         public static final int title_right_text=0x7f070001;
+        public static final int vJoystick=0x7f07001f;
+        public static final int vJoystickStatus=0x7f07001e;
+        public static final int vVol=0x7f07001c;
     }
     public static final class layout {
         public static final int custom_title=0x7f030000;

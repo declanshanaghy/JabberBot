@@ -2,33 +2,25 @@
 	android:layout_width="fill_parent" android:layout_height="fill_parent"
 	xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<LinearLayout android:id="@+id/linearLayout1"
-		android:orientation="horizontal" android:layout_width="fill_parent"
-		android:layout_height="fill_parent" android:gravity="center"
-		android:layout_marginBottom="50dip">
+	<LinearLayout android:orientation="horizontal" android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:gravity="center" android:id="@+id/linearLayout1">
 
-		<com.MobileAnarchy.Android.Widgets.Joystick.JoystickView
-			android:id="@+id/jvDrive" android:layout_width="175dip"
-			android:layout_height="175dip" />
+		<RelativeLayout android:id="@+id/linearLayout2"
+			android:layout_height="fill_parent" android:layout_width="fill_parent" android:layout_weight="1" android:padding="10dip">
+			<Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Random" android:id="@+id/bRandom"></Button>
+            <TextView android:text="Volume" android:id="@+id/textView1"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_above="@+id/vVol"/>
+			<SeekBar android:layout_height="wrap_content" android:layout_width="match_parent" android:layout_alignParentBottom="true" android:id="@+id/vVol"></SeekBar>
+		</RelativeLayout>
 
-		<LinearLayout android:id="@+id/linearLayout2"
-			android:orientation="vertical" android:gravity="center"
-			android:layout_height="wrap_content" android:layout_width="wrap_content">
-			<Button android:text="Button" android:id="@+id/button1"
-				android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
-		</LinearLayout>
-
-		<com.MobileAnarchy.Android.Widgets.Joystick.JoystickView
-			android:id="@+id/jvLook" android:layout_width="175dip"
-			android:layout_height="175dip" />
+        <RelativeLayout android:id="@+id/linearLayout3"
+            android:padding="20dip" android:layout_height="fill_parent" android:layout_width="fill_parent" android:layout_weight="1" android:clipChildren="false" android:clipToPadding="false">
+            <TextView android:text="Look" android:id="@+id/vJoystickStatus"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerHorizontal="true"/>
+	        <com.MobileAnarchy.Android.Widgets.Joystick.JoystickView
+	            android:id="@+id/vJoystick" android:layout_width="175dip"
+	            android:layout_height="175dip" android:layout_centerInParent="true"/>
+        </RelativeLayout>
+			
 	</LinearLayout>
-	<SlidingDrawer android:layout_width="match_parent"
-		android:id="@+id/slidingDrawer1" android:layout_height="match_parent"
-		android:handle="@+id/handle" android:content="@+id/content">
-		<Button android:layout_height="wrap_content"
-			android:layout_width="wrap_content" android:text="Handle" android:id="@+id/handle"></Button>
-		<LinearLayout android:id="@+id/content"
-			android:layout_width="match_parent" android:layout_height="match_parent"></LinearLayout>
-	</SlidingDrawer>
-
 </FrameLayout>
