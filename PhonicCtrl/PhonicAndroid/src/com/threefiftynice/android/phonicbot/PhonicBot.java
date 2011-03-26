@@ -1,5 +1,7 @@
 package com.threefiftynice.android.phonicbot;
 
+import java.util.Arrays;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -26,7 +28,7 @@ import com.MobileAnarchy.Android.Widgets.Joystick.JoystickView;
 
 public class PhonicBot extends Activity {
 	protected static final String TAG = PhonicBot.class.getSimpleName();
-	private static final boolean D = true;
+	private static final boolean D = false;
 
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
@@ -68,17 +70,18 @@ public class PhonicBot extends Activity {
                 }
                 break;
             case MESSAGE_WRITE:
-            	if (D) {
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    String writeMessage = new String(writeBuf);
-	                Log.d(TAG, "TX: " + writeMessage);
-                    break;
-            	}
+                byte[] writeBuf = (byte[]) msg.obj;
+                String writeMessage = new String(writeBuf);
+                Log.d(TAG, "TX: " + writeMessage);
+                break;
             case MESSAGE_READ:
-            	if(D) {
+            	try {
             		byte[] readBuf = (byte[]) msg.obj;
-					String readMessage = new String(readBuf, 0, msg.arg1);
+    				String readMessage = new String(readBuf, 0, msg.arg1);
                     Log.d(TAG, "RX: " + readMessage);
+            	}
+            	catch ( Exception ex) {
+            		Log.e(TAG, ex.getMessage(), ex);
             	}
                 break;
             case MESSAGE_DEVICE_NAME:
@@ -202,11 +205,19 @@ public class PhonicBot extends Activity {
         }
     }
 
+    private void sendMessage(byte[]send) {
+    	sendMessage(send, 0, send.length);
+    }
+    
+    private void sendMessage(byte[]send, int len) {
+    	sendMessage(send, 0, len);
+    }
+    
     /**
      * Sends a message.
      * @param message  A string of text to send.
      */
-    private void sendMessage(byte[] send) {
+    private void sendMessage(byte[] send, int offset, int length) {
     	if ( mBTClient != null ) {
             // Check that we're actually connected before trying anything
             if (mBTClient.getState() != BluetoothClient.STATE_CONNECTED) {
@@ -243,7 +254,7 @@ public class PhonicBot extends Activity {
 		vJoystick = (JoystickView)findViewById(R.id.vJoystick);
 		vJoystick.setMovementConstraint(JoystickView.CONSTRAIN_CIRCLE);
 		vJoystick.setYAxisInverted(false);
-		setJoystickState(JoyStickState.Look);
+		setJoystickState(JoyStickState.Drive);
 
 		vJoystick.setOnJostickClickedListener(new JoystickClickedListener() {
 			@Override
@@ -268,14 +279,14 @@ public class PhonicBot extends Activity {
 		switch ( s ) {
 		case Drive:
 			vJoystickStatus.setText("Drive");
-			vJoystick.setOnJostickMovedListener(motorController);
-			vJoystick.setMovementRange(motorController.getMovementRange());
+			servoController.releaseControl(vJoystick);
+			motorController.takeControl(vJoystick);
 			jvState = JoyStickState.Drive;
 			break;
 		case Look:
 			vJoystickStatus.setText("Look");
-			vJoystick.setOnJostickMovedListener(servoController);
-			vJoystick.setMovementRange(servoController.getMovementRange());
+			motorController.releaseControl(vJoystick);
+			servoController.takeControl(vJoystick);
 			jvState = JoyStickState.Look;
 			break;
 		}
@@ -307,19 +318,56 @@ public class PhonicBot extends Activity {
 	}
 
     private class MotorController implements JoystickMovedListener {
-    	private byte[] out = new byte[] { 0,0,'\n' };
-		private float movementRange = 127.5f;
+    	private byte[] out = new byte[] { 0,0,0,'\n' };
+		private float movementRange = 255f;
 
+		private final static char RIGHT = 'a';
+		private final static char LEFT = 'd';
+		private final static char FWD = '1';
+		private final static char BWD = '2';
+		private final static char BRK = '3';
+		private final static char REL = '4';
+		
 		public float getMovementRange() {
 			return movementRange;
 		}
 		
-		@Override
-		public void OnMoved(int pan, int tilt) {
-			//TODO: Compute vectors and send message
-			Log.d(TAG, String.format("drive(%d,%d)", pan, tilt));
+		public void releaseControl(JoystickView vJoystick) {
+			OnReturnedToCenter();
 		}
 
+		public void takeControl(JoystickView vJoystick) {
+			vJoystick.setOnJostickMovedListener(this);
+			vJoystick.setMovementRange(getMovementRange());
+			vJoystick.setMoveResolution(5f);
+			vJoystick.setUserCoordinateSystem(JoystickView.COORDINATE_DIFFERENTIAL);
+		}
+
+		@Override
+		public void OnMoved(int pan, int tilt) {
+			Log.d(TAG, String.format("drive(%d,%d)", pan, tilt));
+			out[0] = LEFT;
+			out[1] = (byte)(pan < 0 ? BWD : FWD);
+			out[2] = (byte)(Math.abs(pan));
+			sendMessage(out);
+			
+			out[0] = RIGHT;
+			out[1] = (byte)(tilt < 0 ? BWD : FWD);
+			out[2] = (byte)(Math.abs(tilt));
+			sendMessage(out);
+		}
+
+		@Override
+		public void OnReturnedToCenter() {
+			out[0] = LEFT;
+			out[1] = BRK;
+			out[2] = '\n';
+			sendMessage(out);
+			
+			out[0] = RIGHT;
+			sendMessage(out, 3);
+		}
+		
 		@Override
 		public void OnReleased() {
 		}
@@ -329,13 +377,20 @@ public class PhonicBot extends Activity {
 		private byte[] out = new byte[] { 0,0,'\n' };
 		private float movementRange = 90f;
 		
-		public ServoController() {
-		}
-		
 		public float getMovementRange() {
 			return movementRange;
 		}
 		
+		public void releaseControl(JoystickView vJoystick) {
+		}
+
+		public void takeControl(JoystickView vJoystick) {
+			vJoystick.setOnJostickMovedListener(this);
+			vJoystick.setMovementRange(getMovementRange());
+			vJoystick.setMoveResolution(5.0f);
+			vJoystick.setUserCoordinateSystem(JoystickView.COORDINATE_CARTESIAN);
+		}
+
 		@Override
 		public void OnMoved(int pan, int tilt) {
 			pan += movementRange;
@@ -354,6 +409,10 @@ public class PhonicBot extends Activity {
 
 		@Override
 		public void OnReleased() {
+		}
+		
+		@Override
+		public void OnReturnedToCenter() {
 		}
     }
     

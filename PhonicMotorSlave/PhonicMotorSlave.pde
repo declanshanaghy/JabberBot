@@ -216,9 +216,8 @@ void loop() {
       reset();
       break;
     default:
-#if DBG
-      Serial.println("Command not handled");
-#endif
+      Serial.print("Command not handled: ");
+      Serial.print(slave.command);
       break;
     }    
 

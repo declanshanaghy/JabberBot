@@ -157,6 +157,10 @@ public class BluetoothClient {
      * @see ConnectedThread#write(byte[])
      */
     public void write(byte[] out) {
+    	write(out, 0, out.length);
+    }
+    
+    public void write(byte[] out, int offset, int length) {
         // Create temporary object
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
@@ -165,7 +169,7 @@ public class BluetoothClient {
             r = mConnectedThread;
         }
         // Perform the write unsynchronized
-        r.write(out);
+        r.write(out.clone());
     }
 
     /**
@@ -324,6 +328,10 @@ public class BluetoothClient {
          * @param buffer  The bytes to write
          */
         public void write(byte[] buffer) {
+        	write(buffer, 0, buffer.length);
+        }
+        
+        public void write(byte[] buffer, int offset, int count) {
             try {
                 mmOutStream.write(buffer);
 
