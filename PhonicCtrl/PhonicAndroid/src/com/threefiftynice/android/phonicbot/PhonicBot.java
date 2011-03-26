@@ -1,7 +1,5 @@
 package com.threefiftynice.android.phonicbot;
 
-import java.io.UnsupportedEncodingException;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -224,16 +222,12 @@ public class PhonicBot extends Activity {
     }
 
 	private void setupUI() {
+		vJoystickStatus = (TextView)findViewById(R.id.vJoystickStatus);
+		
 		vVol = (SeekBar)findViewById(R.id.vVol);
 		vVol.setOnSeekBarChangeListener(new VolumeControl());
 		vVol.setProgress(50);
 		
-		servoController = new ServoController();
-		motorController = new MotorController();
-		vJoystick = (JoystickView)findViewById(R.id.vJoystick);
-		vJoystickStatus = (TextView)findViewById(R.id.vJoystickStatus);
-		setJoystickState(JoyStickState.Drive);
-
 		Button bRandom = (Button)findViewById(R.id.bRandom);
 		bRandom.setOnClickListener(new OnClickListener() {
 			byte[] random = new byte[] { 'r' };
@@ -243,6 +237,14 @@ public class PhonicBot extends Activity {
 			}
 		});
 		
+		servoController = new ServoController();
+		motorController = new MotorController();
+
+		vJoystick = (JoystickView)findViewById(R.id.vJoystick);
+		vJoystick.setMovementConstraint(JoystickView.CONSTRAIN_CIRCLE);
+		vJoystick.setYAxisInverted(false);
+		setJoystickState(JoyStickState.Look);
+
 		vJoystick.setOnJostickClickedListener(new JoystickClickedListener() {
 			@Override
 			public void OnReleased() {
@@ -255,6 +257,10 @@ public class PhonicBot extends Activity {
 					break;
 				}
 			}
+			
+			@Override
+			public void OnClicked() {
+			}
 		});
 	}
 	
@@ -263,11 +269,13 @@ public class PhonicBot extends Activity {
 		case Drive:
 			vJoystickStatus.setText("Drive");
 			vJoystick.setOnJostickMovedListener(motorController);
+			vJoystick.setMovementRange(motorController.getMovementRange());
 			jvState = JoyStickState.Drive;
 			break;
 		case Look:
 			vJoystickStatus.setText("Look");
 			vJoystick.setOnJostickMovedListener(servoController);
+			vJoystick.setMovementRange(servoController.getMovementRange());
 			jvState = JoyStickState.Look;
 			break;
 		}
@@ -298,9 +306,14 @@ public class PhonicBot extends Activity {
 		}
 	}
 
-    private class MotorController extends JoystickMovedListener {
+    private class MotorController implements JoystickMovedListener {
     	private byte[] out = new byte[] { 0,0,'\n' };
+		private float movementRange = 127.5f;
 
+		public float getMovementRange() {
+			return movementRange;
+		}
+		
 		@Override
 		public void OnMoved(int pan, int tilt) {
 			//TODO: Compute vectors and send message
@@ -308,26 +321,26 @@ public class PhonicBot extends Activity {
 		}
 
 		@Override
-		public int getMode() {
-			return MODE_SWINGAXIS;
-		}
-
-		@Override
-		public int getRange() {
-			return 255;
-		}
-		
-		@Override
-		public float getSensitivity() {
-			return 2.0f;
+		public void OnReleased() {
 		}
     }
     
-    private class ServoController extends JoystickMovedListener {
+    private class ServoController implements JoystickMovedListener {
 		private byte[] out = new byte[] { 0,0,'\n' };
+		private float movementRange = 90f;
+		
+		public ServoController() {
+		}
+		
+		public float getMovementRange() {
+			return movementRange;
+		}
 		
 		@Override
 		public void OnMoved(int pan, int tilt) {
+			pan += movementRange;
+			tilt += movementRange;
+			
 			if(D) Log.d(TAG, String.format("look(%d,%d)", pan, tilt));
 			
 			out[0] = 'e';
@@ -340,13 +353,7 @@ public class PhonicBot extends Activity {
 		}
 
 		@Override
-		public int getMode() {
-			return JoystickMovedListener.MODE_NOSWINGAXIS;
-		}
-
-		@Override
-		public int getRange() {
-			return 180;
+		public void OnReleased() {
 		}
     }
     
