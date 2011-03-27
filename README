@@ -1,0 +1,9 @@
+JabberBot is a bluetooth remote controlled robot.
+It has:
+- 2 differential drive wheels
+- Pan/Tilt servo
+- WAV Playback
+- Digital volume control
+
+Input control is over bluetooth SPP.
+Daughter boards are controlled via I2C.
