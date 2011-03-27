@@ -10,7 +10,7 @@
 #define PIN_SRV_H    9
 
 short addr = 0;
-MorpheusSlave slave;
+MorpheusSlave slave = MorpheusSlave(3);
 uint8_t dir;
 uint16_t spd;
 uint16_t angle;
@@ -20,7 +20,7 @@ AF_DCMotor ml(4, MOTOR34_1KHZ); // create motor #4, 64KHz pwm
 Servo sv; 
 Servo sh; 
 
-#define DBG 0
+#define DBG 1
 
 void setup()
 {
@@ -101,9 +101,9 @@ void extractDCMotorParams() {
 #endif
     spd = 255;
   }
-  else if ( spd != 0 && spd < 50 ) {
+  else if ( spd < 0 ) {
 #if DBG
-    Serial.print("ERROR: speed < 50: ");
+    Serial.print("ERROR: speed < 0: ");
 #endif
     spd = 50;
   }
@@ -154,7 +154,7 @@ void loop() {
     switch ( slave.command ) {
     case 'a':  //Motor 1
 #if DBG
-      Serial.print("right: ");
+      Serial.print("R: ");
 #endif
       extractDCMotorParams();
       mr.setSpeed(spd);
@@ -162,7 +162,7 @@ void loop() {
       break;
     case 'd':  //Motor 4
 #if DBG
-      Serial.print("left: ");
+      Serial.print("L: ");
 #endif
       extractDCMotorParams();
       ml.setSpeed(spd);
@@ -200,19 +200,22 @@ void loop() {
       break;
     case 'e':
 #if DBG
-      Serial.print("vertical: ");
+      Serial.print("V: ");
 #endif
       extractServoParams();
       setVertical(angle);
       break;
     case 'f':
 #if DBG
-      Serial.print("horizontal: ");
+      Serial.print("H: ");
 #endif
       extractServoParams();
       setHorizontal(angle);
       break;
     case 'z':
+      reset();
+      break;
+    case NULL:
       reset();
       break;
     default:

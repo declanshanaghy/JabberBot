@@ -72,13 +72,13 @@ public class PhonicBot extends Activity {
             case MESSAGE_WRITE:
                 byte[] writeBuf = (byte[]) msg.obj;
                 String writeMessage = new String(writeBuf);
-                Log.d(TAG, "TX: " + writeMessage);
+                Log.d(TAG, "TX: \"" + writeMessage + "\"");
                 break;
             case MESSAGE_READ:
             	try {
             		byte[] readBuf = (byte[]) msg.obj;
     				String readMessage = new String(readBuf, 0, msg.arg1);
-                    Log.d(TAG, "RX: " + readMessage);
+                    Log.d(TAG, "RX: \"" + readMessage + "\"");
             	}
             	catch ( Exception ex) {
             		Log.e(TAG, ex.getMessage(), ex);
@@ -317,9 +317,11 @@ public class PhonicBot extends Activity {
 		}
 	}
 
-    private class MotorController implements JoystickMovedListener {
-    	private byte[] out = new byte[] { 0,0,0,'\n' };
+    private class MotorController implements JoystickMovedListener, Runnable {
+    	private byte[] out = new byte[] { 0,0,0 };
 		private float movementRange = 255f;
+		private int pan;
+		private int tilt;
 
 		private final static char RIGHT = 'a';
 		private final static char LEFT = 'd';
@@ -345,6 +347,13 @@ public class PhonicBot extends Activity {
 
 		@Override
 		public void OnMoved(int pan, int tilt) {
+			this.pan = pan;
+			this.tilt = tilt;
+			mHandler.removeCallbacks(this);
+			mHandler.postDelayed(this, 50);
+		}
+		
+		public void run() {
 			Log.d(TAG, String.format("drive(%d,%d)", pan, tilt));
 			out[0] = LEFT;
 			out[1] = (byte)(pan < 0 ? BWD : FWD);
@@ -358,30 +367,36 @@ public class PhonicBot extends Activity {
 		}
 
 		@Override
+		public void OnReleased() {
+			mHandler.removeCallbacks(this);
+		}
+		
+		@Override
 		public void OnReturnedToCenter() {
+			mHandler.removeCallbacks(this);
+			
 			out[0] = LEFT;
 			out[1] = BRK;
 			out[2] = '\n';
 			sendMessage(out);
 			
 			out[0] = RIGHT;
-			sendMessage(out, 3);
-		}
-		
-		@Override
-		public void OnReleased() {
+			sendMessage(out);
 		}
     }
     
-    private class ServoController implements JoystickMovedListener {
+    private class ServoController implements JoystickMovedListener, Runnable {
 		private byte[] out = new byte[] { 0,0,'\n' };
 		private float movementRange = 90f;
+		private int pan;
+		private int tilt;
 		
 		public float getMovementRange() {
 			return movementRange;
 		}
 		
 		public void releaseControl(JoystickView vJoystick) {
+			mHandler.removeCallbacks(this);
 		}
 
 		public void takeControl(JoystickView vJoystick) {
@@ -393,9 +408,13 @@ public class PhonicBot extends Activity {
 
 		@Override
 		public void OnMoved(int pan, int tilt) {
-			pan += movementRange;
-			tilt += movementRange;
-			
+			this.pan = (int) (pan + movementRange);
+			this.tilt = (int) (tilt + movementRange);
+			mHandler.removeCallbacks(this);
+			mHandler.postDelayed(this, 100);
+		}
+		
+		public void run() {
 			if(D) Log.d(TAG, String.format("look(%d,%d)", pan, tilt));
 			
 			out[0] = 'e';
@@ -409,10 +428,20 @@ public class PhonicBot extends Activity {
 
 		@Override
 		public void OnReleased() {
+			mHandler.removeCallbacks(this);
 		}
 		
 		@Override
 		public void OnReturnedToCenter() {
+			mHandler.removeCallbacks(this);
+			
+			out[0] = 'e';
+			out[1] = (byte)90;
+			sendMessage(out);
+				
+			out[0] = 'f';
+			out[1] = (byte)90;
+			sendMessage(out);
 		}
     }
     
