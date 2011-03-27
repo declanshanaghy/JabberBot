@@ -46,6 +46,11 @@ public class JabberBot extends Activity {
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
 
+	private static final float MOTOR_UI_RESOLUTION = 1.0f;
+	private static final long MOTOR_UI_DELAY = 25;
+	private static final float SERVO_UI_RESOLUTION = 1.0f;
+	private static final long SERVO_UI_DELAY = 25;
+
     private final Handler mHandler = new Handler() {
 		@Override
         public void handleMessage(Message msg) {
@@ -140,6 +145,12 @@ public class JabberBot extends Activity {
 		setupUI();			
 	}
 
+    @Override
+    protected void onPause() {
+        sendMessage(new byte[] { 'z' });
+    	super.onPause();
+    }
+    
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -237,7 +248,7 @@ public class JabberBot extends Activity {
 		
 		vVol = (SeekBar)findViewById(R.id.vVol);
 		vVol.setOnSeekBarChangeListener(new VolumeControl());
-		vVol.setProgress(50);
+		vVol.setProgress(80);
 		
 		Button bRandom = (Button)findViewById(R.id.bRandom);
 		bRandom.setOnClickListener(new OnClickListener() {
@@ -341,7 +352,7 @@ public class JabberBot extends Activity {
 		public void takeControl(JoystickView vJoystick) {
 			vJoystick.setOnJostickMovedListener(this);
 			vJoystick.setMovementRange(getMovementRange());
-			vJoystick.setMoveResolution(5f);
+			vJoystick.setMoveResolution(MOTOR_UI_RESOLUTION);
 			vJoystick.setUserCoordinateSystem(JoystickView.COORDINATE_DIFFERENTIAL);
 		}
 
@@ -350,7 +361,7 @@ public class JabberBot extends Activity {
 			this.pan = pan;
 			this.tilt = tilt;
 			mHandler.removeCallbacks(this);
-			mHandler.postDelayed(this, 50);
+			mHandler.postDelayed(this, MOTOR_UI_DELAY);
 		}
 		
 		public void run() {
@@ -402,7 +413,7 @@ public class JabberBot extends Activity {
 		public void takeControl(JoystickView vJoystick) {
 			vJoystick.setOnJostickMovedListener(this);
 			vJoystick.setMovementRange(getMovementRange());
-			vJoystick.setMoveResolution(5.0f);
+			vJoystick.setMoveResolution(SERVO_UI_RESOLUTION);
 			vJoystick.setUserCoordinateSystem(JoystickView.COORDINATE_CARTESIAN);
 		}
 
@@ -411,7 +422,7 @@ public class JabberBot extends Activity {
 			this.pan = (int) (pan + movementRange);
 			this.tilt = (int) (tilt + movementRange);
 			mHandler.removeCallbacks(this);
-			mHandler.postDelayed(this, 100);
+			mHandler.postDelayed(this, SERVO_UI_DELAY);
 		}
 		
 		public void run() {
