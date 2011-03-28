@@ -123,7 +123,7 @@ public class JabberBot extends Activity {
 
         // Set up the window layout
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
-		setContentView(R.layout.phonic);
+		setContentView(R.layout.singlestick);
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title);
 
         // Set up the custom title
