@@ -22,6 +22,7 @@ MorpheusMotor motor = MorpheusMotor(0b100);
 MorpheusSlave slave = MorpheusSlave(3);
 
 int vol;
+uint8_t loops;
 
 void setup() {
   Serial.begin(115200);
@@ -63,10 +64,12 @@ void loop() {
       proxyServoParams(2);
       break;
     case 'r':
+      loops = slave.getData(0);
 #if DBG
       Serial.print("random: ");
+      Serial.println(loops);
 #endif
-      fx0.playRandom();
+      fx0.playRandom(loops);
       break;
     case 'v':
       vol = slave.getData(0);

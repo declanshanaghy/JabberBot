@@ -1,7 +1,5 @@
 package com.threefiftynice.android.jabberbot;
 
-import java.util.Arrays;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -22,13 +20,14 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.MobileAnarchy.Android.Widgets.Joystick.DualJoystickView;
 import com.MobileAnarchy.Android.Widgets.Joystick.JoystickClickedListener;
 import com.MobileAnarchy.Android.Widgets.Joystick.JoystickMovedListener;
 import com.MobileAnarchy.Android.Widgets.Joystick.JoystickView;
 
 public class JabberBot extends Activity {
 	protected static final String TAG = JabberBot.class.getSimpleName();
-	private static final boolean D = false;
+	private static final boolean D = true;
 
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
@@ -47,9 +46,11 @@ public class JabberBot extends Activity {
     public static final String TOAST = "toast";
 
 	private static final float MOTOR_UI_RESOLUTION = 1.0f;
-	private static final long MOTOR_UI_DELAY = 25;
+	private static final long MOTOR_UI_DELAY = 0;
+	private static final int MOTOR_MIN_DRIVE = 20;
+
 	private static final float SERVO_UI_RESOLUTION = 1.0f;
-	private static final long SERVO_UI_DELAY = 25;
+	private static final long SERVO_UI_DELAY = 0;
 
     private final Handler mHandler = new Handler() {
 		@Override
@@ -75,18 +76,22 @@ public class JabberBot extends Activity {
                 }
                 break;
             case MESSAGE_WRITE:
-                byte[] writeBuf = (byte[]) msg.obj;
-                String writeMessage = new String(writeBuf);
-                Log.d(TAG, "TX: \"" + writeMessage + "\"");
+            	if (D) {
+                    byte[] writeBuf = (byte[]) msg.obj;
+                    String writeMessage = new String(writeBuf);
+                    Log.d(TAG, "TX: \"" + writeMessage + "\"");
+            	}
                 break;
             case MESSAGE_READ:
-            	try {
-            		byte[] readBuf = (byte[]) msg.obj;
-    				String readMessage = new String(readBuf, 0, msg.arg1);
-                    Log.d(TAG, "RX: \"" + readMessage + "\"");
-            	}
-            	catch ( Exception ex) {
-            		Log.e(TAG, ex.getMessage(), ex);
+            	if (D) {
+                	try {
+                		byte[] readBuf = (byte[]) msg.obj;
+        				String readMessage = new String(readBuf, 0, msg.arg1);
+                        Log.d(TAG, "RX: \"" + readMessage + "\"");
+                	}
+                	catch ( Exception ex) {
+                		Log.e(TAG, ex.getMessage(), ex);
+                	}
             	}
                 break;
             case MESSAGE_DEVICE_NAME:
@@ -101,11 +106,10 @@ public class JabberBot extends Activity {
         }
     };
 
-	private enum JoyStickState { Drive, Look };
-	private JoyStickState jvState = JoyStickState.Look;
-	
 	private ServoController servoController;
 	private MotorController motorController;
+	private JoystickClickedListener driveClickedListener;
+	private JoystickClickedListener lookClickedListener;
 
 	private BluetoothClient mBTClient;
 	private TextView mTitle;
@@ -113,8 +117,7 @@ public class JabberBot extends Activity {
 
 	private BluetoothAdapter mBluetoothAdapter;
 
-	private JoystickView vJoystick;
-	private TextView vJoystickStatus;
+	private DualJoystickView vJoystick;
 	private SeekBar vVol;
 
     @Override
@@ -123,7 +126,7 @@ public class JabberBot extends Activity {
 
         // Set up the window layout
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
-		setContentView(R.layout.singlestick);
+		setContentView(R.layout.dualstick);
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.custom_title);
 
         // Set up the custom title
@@ -244,8 +247,6 @@ public class JabberBot extends Activity {
     }
 
 	private void setupUI() {
-		vJoystickStatus = (TextView)findViewById(R.id.vJoystickStatus);
-		
 		vVol = (SeekBar)findViewById(R.id.vVol);
 		vVol.setOnSeekBarChangeListener(new VolumeControl());
 		vVol.setProgress(80);
@@ -262,47 +263,37 @@ public class JabberBot extends Activity {
 		servoController = new ServoController();
 		motorController = new MotorController();
 
-		vJoystick = (JoystickView)findViewById(R.id.vJoystick);
+		vJoystick = (DualJoystickView)findViewById(R.id.vJoystick);
 		vJoystick.setMovementConstraint(JoystickView.CONSTRAIN_CIRCLE);
-		vJoystick.setYAxisInverted(false);
-		setJoystickState(JoyStickState.Drive);
+		vJoystick.setOnJostickMovedListener(motorController, servoController);
+		vJoystick.setYAxisInverted(false, false);
+		vJoystick.setAutoReturnToCenter(true, false);
+		vJoystick.setMovementRange(motorController.getMovementRange(), servoController.getMovementRange());
+		vJoystick.setMoveResolution(MOTOR_UI_RESOLUTION, SERVO_UI_RESOLUTION);
+		vJoystick.setUserCoordinateSystem(JoystickView.COORDINATE_DIFFERENTIAL, JoystickView.COORDINATE_CARTESIAN);
 
-		vJoystick.setOnJostickClickedListener(new JoystickClickedListener() {
+		driveClickedListener = new JoystickClickedListener() {
 			@Override
 			public void OnReleased() {
-				switch ( jvState ) {
-				case Look:
-					setJoystickState(JoyStickState.Drive);
-					break;
-				case Drive:
-					setJoystickState(JoyStickState.Look);
-					break;
-				}
 			}
 			
 			@Override
 			public void OnClicked() {
 			}
-		});
+		};
+		
+		lookClickedListener = new JoystickClickedListener() {
+			@Override
+			public void OnReleased() {
+			}
+			
+			@Override
+			public void OnClicked() {
+			}
+		};
+		vJoystick.setOnJostickClickedListener(driveClickedListener, lookClickedListener);
 	}
 	
-    private void setJoystickState(JoyStickState s) {
-		switch ( s ) {
-		case Drive:
-			vJoystickStatus.setText("Drive");
-			servoController.releaseControl(vJoystick);
-			motorController.takeControl(vJoystick);
-			jvState = JoyStickState.Drive;
-			break;
-		case Look:
-			vJoystickStatus.setText("Look");
-			motorController.releaseControl(vJoystick);
-			servoController.takeControl(vJoystick);
-			jvState = JoyStickState.Look;
-			break;
-		}
-	}
-
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -331,8 +322,8 @@ public class JabberBot extends Activity {
     private class MotorController implements JoystickMovedListener, Runnable {
     	private byte[] out = new byte[] { 0,0,0 };
 		private float movementRange = 255f;
-		private int pan;
-		private int tilt;
+		private int left;
+		private int right;
 
 		private final static char RIGHT = 'a';
 		private final static char LEFT = 'd';
@@ -344,36 +335,32 @@ public class JabberBot extends Activity {
 		public float getMovementRange() {
 			return movementRange;
 		}
-		
-		public void releaseControl(JoystickView vJoystick) {
-			OnReturnedToCenter();
-		}
-
-		public void takeControl(JoystickView vJoystick) {
-			vJoystick.setOnJostickMovedListener(this);
-			vJoystick.setMovementRange(getMovementRange());
-			vJoystick.setMoveResolution(MOTOR_UI_RESOLUTION);
-			vJoystick.setUserCoordinateSystem(JoystickView.COORDINATE_DIFFERENTIAL);
-		}
 
 		@Override
-		public void OnMoved(int pan, int tilt) {
-			this.pan = pan;
-			this.tilt = tilt;
+		public void OnMoved(int left, int right) {
+			if (Math.abs(left) >= MOTOR_MIN_DRIVE || Math.abs(right) >= MOTOR_MIN_DRIVE ) {
+				this.left = left;
+				this.right = right;
+			}
+			else {
+				this.left = 0;
+				this.right = 0;
+			}
 			mHandler.removeCallbacks(this);
 			mHandler.postDelayed(this, MOTOR_UI_DELAY);
 		}
 		
 		public void run() {
-			Log.d(TAG, String.format("drive(%d,%d)", pan, tilt));
+			if (D) Log.d(TAG, String.format("drive(%d,%d)", left, right));
+			
 			out[0] = LEFT;
-			out[1] = (byte)(pan < 0 ? BWD : FWD);
-			out[2] = (byte)(Math.abs(pan));
+			out[1] = (byte)(left < 0 ? BWD : FWD);
+			out[2] = (byte)(Math.abs(left));
 			sendMessage(out);
 			
 			out[0] = RIGHT;
-			out[1] = (byte)(tilt < 0 ? BWD : FWD);
-			out[2] = (byte)(Math.abs(tilt));
+			out[1] = (byte)(right < 0 ? BWD : FWD);
+			out[2] = (byte)(Math.abs(right));
 			sendMessage(out);
 		}
 
@@ -406,20 +393,9 @@ public class JabberBot extends Activity {
 			return movementRange;
 		}
 		
-		public void releaseControl(JoystickView vJoystick) {
-			mHandler.removeCallbacks(this);
-		}
-
-		public void takeControl(JoystickView vJoystick) {
-			vJoystick.setOnJostickMovedListener(this);
-			vJoystick.setMovementRange(getMovementRange());
-			vJoystick.setMoveResolution(SERVO_UI_RESOLUTION);
-			vJoystick.setUserCoordinateSystem(JoystickView.COORDINATE_CARTESIAN);
-		}
-
 		@Override
 		public void OnMoved(int pan, int tilt) {
-			this.pan = (int) (pan + movementRange);
+			this.pan = 180 - (int) (pan + movementRange);
 			this.tilt = (int) (tilt + movementRange);
 			mHandler.removeCallbacks(this);
 			mHandler.postDelayed(this, SERVO_UI_DELAY);
