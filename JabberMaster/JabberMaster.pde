@@ -5,7 +5,7 @@
 #include <MorpheusMotor.h>
 #include <MorpheusSlave.h>
 
-#define DBG 0
+#define DBG 1
 
 #define VOL_CS      10
 #define VOL_MUTE    8
@@ -16,7 +16,7 @@
 #define RELEASE   4
 
 DS1802 volCtrl = DS1802(VOL_CS,VOL_MUTE);
-MorpheusAudio fx0 = MorpheusAudio(0b000);
+MorpheusAudio fx0 = MorpheusAudio(0b001);
 MorpheusMotor motor = MorpheusMotor(0b100);
 
 MorpheusSlave slave = MorpheusSlave(3);
