@@ -14,21 +14,21 @@
 	        <TableRow android:id="@+id/tableRow1" android:layout_width="wrap_content"
 	            android:layout_height="wrap_content">
 	            <Button android:layout_width="wrap_content"
-	                android:layout_height="wrap_content" android:text="ABCDEF"
+	                android:layout_height="wrap_content" android:text="Random"
 	                android:id="@+id/b1" android:layout_centerHorizontal="true" android:layout_margin="5dip"/>
 	            <Button android:layout_width="wrap_content"
-	                android:layout_height="wrap_content" android:text="Random"
-	                android:id="@+id/bRandom" android:layout_centerHorizontal="true"
+	                android:layout_height="wrap_content" android:text="Horn"
+	                android:id="@+id/b2" android:layout_centerHorizontal="true"
 	                android:layout_below="@+id/b1" android:layout_margin="5dip"/>
 	        </TableRow>
 	        <TableRow android:id="@+id/tableRow2" android:layout_width="wrap_content"
 	            android:layout_height="wrap_content">
 	            <Button android:layout_width="wrap_content"
-	                android:layout_height="wrap_content" android:text="12345"
-	                android:id="@+id/b2" android:layout_centerHorizontal="true" android:layout_margin="5dip"/>
+	                android:layout_height="wrap_content" android:text="Yoda"
+	                android:id="@+id/b3" android:layout_centerHorizontal="true" android:layout_margin="5dip"/>
 	            <Button android:layout_width="wrap_content"
-	                android:layout_height="wrap_content" android:text="GHJKUY"
-	                android:id="@+id/b3" android:layout_centerHorizontal="true"
+	                android:layout_height="wrap_content" android:text="Chewy"
+	                android:id="@+id/b4" android:layout_centerHorizontal="true"
 	                android:layout_below="@+id/b1" android:layout_margin="5dip"/>
 	        </TableRow>
 		</TableLayout>

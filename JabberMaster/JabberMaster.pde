@@ -5,7 +5,7 @@
 #include <MorpheusMotor.h>
 #include <MorpheusSlave.h>
 
-#define DBG 1
+#define DBG 0
 
 #define VOL_CS      10
 #define VOL_MUTE    8
@@ -16,20 +16,25 @@
 #define RELEASE   4
 
 DS1802 volCtrl = DS1802(VOL_CS,VOL_MUTE);
-MorpheusAudio fx0 = MorpheusAudio(0b001);
+MorpheusAudio fx1 = MorpheusAudio(0b001);
+MorpheusAudio fx2 = MorpheusAudio(0b010);
+MorpheusAudio fx3 = MorpheusAudio(0b011);
 MorpheusMotor motor = MorpheusMotor(0b100);
 
-MorpheusSlave slave = MorpheusSlave(3);
+MorpheusSlave slave = MorpheusSlave(4);
 
 int vol;
 uint8_t loops;
+uint8_t addr;
 
 void setup() {
   Serial.begin(115200);
   randomSeed(analogRead(3));
   Wire.begin(); // join i2c bus (address optional for master)
   
-  fx0.indexFiles();
+  fx1.indexFiles();
+  fx2.indexFiles();
+  fx3.indexFiles();
   
   Serial.println("JabberBot: RDY :-)");
 }
@@ -63,13 +68,29 @@ void loop() {
 #endif
       proxyServoParams(2);
       break;
+    case 'p':
+#if DBG
+      Serial.print("play: ");
+#endif
+      proxyPlayParams();
+      break;
     case 'r':
       loops = slave.getData(0);
 #if DBG
       Serial.print("random: ");
       Serial.println(loops);
 #endif
-      fx0.playRandom(loops);
+      fx2.playRandom(loops);
+      break;
+    case 's':
+      addr = slave.getData(0);
+#if DBG
+      Serial.print("stop: ");
+      Serial.println(addr);
+#endif
+      if ( addr == 1 ) fx1.stop();
+      if ( addr == 2 ) fx2.stop();
+      if ( addr == 3 ) fx3.stop();
       break;
     case 'v':
       vol = slave.getData(0);
@@ -94,7 +115,33 @@ void reset() {
   motor.setDCMotorParams(4, RELEASE, 0);
   motor.setServoParams(1, 90);
   motor.setServoParams(2, 90);
-  fx0.stop();
+  fx1.stop();
+  fx2.stop();
+  fx3.stop();
+}
+
+void proxyPlayParams() {
+  short addr = slave.getData(0);
+  short nLoop = slave.getData(1);
+  short id = slave.getData(2);
+  
+  Serial.print(addr);
+  Serial.print(",");
+  Serial.print(nLoop);
+  Serial.print(",");
+  Serial.println(id);
+  
+  switch (addr) {
+    case 1:
+      fx1.playById(nLoop, id);
+      break;
+    case 2:
+      fx2.playById(nLoop, id);
+      break;
+    case 3:
+      fx3.playById(nLoop, id);
+      break;
+  }
 }
 
 void proxyServoParams(int n) {

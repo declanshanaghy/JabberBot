@@ -119,7 +119,7 @@ public class BluetoothClient {
         if (mConnectedThread != null) {mConnectedThread.cancel(); mConnectedThread = null;}
 
         // Start the thread to manage the connection and perform transmissions
-        mConnectedThread = new ConnectedThread(socket, socketType);
+        mConnectedThread = new ConnectedThread(device, socket, socketType);
         mConnectedThread.start();
 
         // Send the name of the connected device back to the UI Activity
@@ -273,6 +273,10 @@ public class BluetoothClient {
         }
     }
 
+    public BluetoothDevice getConnectedDevice() {
+    	return ( mState == STATE_CONNECTED ) ? mConnectedThread.mmDevice : null;
+    }
+    
     /**
      * This thread runs during a connection with a remote device.
      * It handles all incoming and outgoing transmissions.
@@ -281,9 +285,11 @@ public class BluetoothClient {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+		private final BluetoothDevice mmDevice;
 
-        public ConnectedThread(BluetoothSocket socket, String socketType) {
+        public ConnectedThread(BluetoothDevice device, BluetoothSocket socket, String socketType) {
             Log.d(TAG, "create ConnectedThread: " + socketType);
+            mmDevice = device;
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
