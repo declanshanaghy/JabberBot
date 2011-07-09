@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_connect"
+          android:icon="@android:drawable/ic_menu_search"
+          android:title="Connect..." />
+    <item android:id="@+id/menu_music_on"
+          android:icon="@drawable/ic_media_play"
+          android:title="Play" />
+    <item android:id="@+id/menu_music_off"
+          android:icon="@drawable/ic_media_pause"
+          android:title="Stop" />
+    <item android:id="@+id/menu_reset"
+          android:icon="@android:drawable/ic_menu_manage"
+          android:title="Reset" />
+</menu>
